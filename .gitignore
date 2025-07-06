@@ -1,0 +1,29 @@
+# --- ENVIRONNEMENTS VIRTUELS ---
+venv/
+venv-api/
+.env
+
+# --- FICHIERS PYTHON COMPILÉS ---
+__pycache__/
+*.py[cod]
+
+# --- LOGS & DUMPS ---
+*.log
+*.sqlite3
+*.db
+
+# --- DOSSIERS DE CONFIGURATION D'ÉDITEURS ---
+.vscode/
+.idea/
+
+# --- JUPYTER ---
+.ipynb_checkpoints/
+
+# --- DOSSIERS DE BUILD ---
+build/
+dist/
+*.egg-info/
+
+# --- SYSTÈME ---
+.DS_Store
+Thumbs.db

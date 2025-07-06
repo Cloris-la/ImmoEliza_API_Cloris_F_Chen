@@ -1,0 +1,85 @@
+"""
+INPUT DATA:
+
+{
+""data"": {"	
+	"zip_code": int
+	"bedroom_number": int
+	"surface": int
+	"lift": Optional[bool]
+	"garden": Optional[bool]
+	"swimming_pool": Optional[bool]
+	"terrace": Optional[bool]
+	"parking": Optional[bool]
+	"epc_score": Optional["A++" | "A+" | "A" | "B" | "C" | "D" | "E"| "F"| "G"]
+	"building_state": Optional["AS_NEW" | "JUST_RENOVATED" | "GOOD" | "TO_BE_DONE_UP" | "TO_RENOVATE" | "TO_RESTORE"]
+	"type": "APARTMENT" | "HOUSE"
+}}	
+
+
+"""
+
+
+def is_yes(value):
+    if str(value).upper() in ["Y", "YES"]:
+        numeric_value = 1
+    else:
+        numeric_value = 0
+
+    return numeric_value
+
+lift = is_yes()
+garden = is_yes()
+swimming_pool = is_yes()
+terrace = is_yes()
+parking = is_yes()
+
+
+def epcScore(value: str) -> int:
+    epc_order = ['A++', 'A+', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+    try:
+        return epc_order.index(value)
+    except (ValueError, TypeError):
+        return None
+
+epc_score = epcScore(value)
+
+
+def buildingState(value: str) -> int:
+    state_order = ['AS_NEW', 'JUST_RENOVATED', 'GOOD', 'TO_BE_DONE_UP', 'TO_RENOVATE', 'TO_RESTORE']
+    try:
+        return state_order.index(value)
+    except (ValueError, TypeError):
+        return None
+
+building_state = buildingState(value)
+
+def property(value):
+
+    try:
+        if str(value).upper() == "Apartment":
+            return 0
+        
+        elif str(value).upper() == "House":
+            return 1
+
+    except (ValueError, TypeError):
+        return None
+    return numeric_value
+
+prop = property(value)
+
+
+# to implement:
+import pandas as pd
+codes = pd.read_csv("Aperol project/data/georef-belgium-postal-codes@public.csv")
+# take the zipcode 
+# then get:
+# latitude
+# longitude
+# region_Brussels
+# region_Flanders
+# region_Wallonia
+
+
+
