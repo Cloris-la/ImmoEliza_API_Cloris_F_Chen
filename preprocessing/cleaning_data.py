@@ -18,8 +18,8 @@ class DataValidator:
         '''
         validate mandatory fields and types
         '''
-        # check required fields
-        required_fields = ["area", "property-type", "bedroom-number", 'zip-code']
+
+        required_fields = ["area", "property-type", "rooms-number", 'zip-code']
         
         for field in required_fields:
             if field not in data_dict:
@@ -35,7 +35,7 @@ class DataValidator:
         if data_dict["property-type"] not in valid_types:
             return False, f"Invalid property type. Must be one of {valid_types}."
         
-        if data_dict["bedroom-number"] < 0:
+        if data_dict["rooms-number"] < 0:  
             return False, "Number of rooms cannot be negative."
         
         zip_code = data_dict["zip-code"]
@@ -58,13 +58,13 @@ class InputCleaner:
         # field mapping: API format -> Training format
         field_mapping = {
             "area": "habitablesurface",
-            "bedroom-number": "bedroomcount",
+            "rooms-number": "bedroomcount", 
             "lift":"lift",
             "garden": "garden",
             "swimming-pool": "swimmingpool",
             "terrace": "terrace",
             "parking":"parking",
-            "epc_score":"epcscore",
+            "epc-score":"epcscore",  
             "building-state": "building_state",
             "property-type": "property_type",
             "zip-code": "zip_code",
@@ -244,8 +244,8 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     
     def __init__(self):
         self.required_features = [
-            'bedroomcount', 'habitablesurface', 'haslift','hasgarden', 
-            'hasswimmingpool', 'hasterrace', 'hasparking','epcscore_encoded',
+            'bedroomcount', 'habitablesurface', 'haslift', 'hasgarden', 
+            'hasswimmingpool', 'hasterrace', 'hasparking', 'epcscore_encoded',
             'buildingcondition_encoded', 'region_Brussels', 'region_Flanders',
             'region_Wallonia', 'type_encoded', 'latitude', 'longitude'
         ]
@@ -298,8 +298,7 @@ def preprocess(data_dict):
         # 2. transform to DataFrame
         df = InputCleaner.json_to_dataframe(data_dict)
         
-        # 3. Using prepeocessing pipeline
-        # Attention: Assuming pipeline already be saved and loaded when training
+        # 3. Using preprocessing pipeline
         pipeline = load_preprocessing_pipeline()
         if pipeline is None:
             # Create a new pipeline if no saved pipeline
@@ -312,13 +311,14 @@ def preprocess(data_dict):
     except Exception as e:
         return None, f'Error during preprocessing: {str(e)}'
 
-def save_preprocessing_pipeline(pipeline, filepath='model_deployment/preprocessing_pipeline.pkl'):
+def save_preprocessing_pipeline(pipeline, filepath='preprocessing/preprocessing_pipeline.pkl'):
     """
     save preprocessing pipeline
     """
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
     joblib.dump(pipeline, filepath)
 
-def load_preprocessing_pipeline(filepath='model_deployment/preprocessing_pipeline.pkl'):
+def load_preprocessing_pipeline(filepath='preprocessing/preprocessing_pipeline.pkl'):
     """
     load preprocessing pipeline
     """
@@ -335,4 +335,5 @@ def fit_and_save_pipeline(training_data):
     pipeline = create_preprocessing_pipeline()
     pipeline.fit(training_data)
     save_preprocessing_pipeline(pipeline)
+    print("✅ Pipeline saved successfully!")
     return pipeline
