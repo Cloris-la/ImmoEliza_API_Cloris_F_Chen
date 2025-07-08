@@ -118,29 +118,6 @@ try:
         Health check
         """
         return "alive"
-
-    @app.get("/test")
-    def test_imports():
-        """
-        Test if imports work
-        """
-        try:
-            from preprocessing.cleaning_data import preprocess
-            from predict.prediction import predict
-            return {"status": "success", "message": "All imports working"}
-        except Exception as e:
-            return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
-
-    @app.get("/debug-openapi")
-    def debug_openapi():
-        """
-        Debug OpenAPI generation
-        """
-        try:
-            openapi_schema = app.openapi()
-            return {"status": "success", "message": "OpenAPI schema generated successfully"}
-        except Exception as e:
-            return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
     
     @app.get("/predict")
     def predict_info():
