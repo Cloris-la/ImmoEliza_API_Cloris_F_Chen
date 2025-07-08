@@ -10,10 +10,6 @@ try:
     from typing import Optional
     import uvicorn
     
-    # Import our modules
-    from preprocessing.cleaning_data import preprocess
-    from predict.prediction import predict
-    
     app = FastAPI(
         title="ImmoEliza House Price Prediction API",
         description="Simplified API - Contains only fields actually used by the model",
@@ -67,6 +63,10 @@ try:
                                             description="Building condition. Must be: NEW, GOOD, TO RENOVATE, JUST RENOVATED, TO BNE DONE UP, or TO REBUILD (case insensitive)",
                                             example="GOOD")
         
+        epc_score: Optional[str] = Field(None, alias="epc-score",
+                                       description="Energy Performance Certificate score. Must be: A++, A+, A, B, C, D, E, F, G (case insensitive)",
+                                       example="C")
+        
         # Field validation with clear error messages
         @field_validator('property_type')
         def validate_property_type(cls, v):
@@ -91,6 +91,19 @@ try:
                 allowed_readable = ['NEW', 'GOOD', 'TO RENOVATE', 'JUST RENOVATED','TO BE DONE UP', 'TO REBUILD']
                 raise ValueError(f'Building state must be one of: {", ".join(allowed_readable)} (case insensitive). You entered: "{v}"')
             return v_upper
+        
+        @field_validator('epc_score')
+        def validate_epc_score(cls, v):
+            if v is None:
+                return v
+            
+            # Convert to uppercase for comparison
+            v_upper = v.upper() if isinstance(v, str) else v
+            allowed = ['A++', 'A+', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+            
+            if v_upper not in allowed:
+                raise ValueError(f'EPC score must be one of: {", ".join(allowed)} (case insensitive). You entered: "{v}"')
+            return v_upper
     
     class PredictionRequest(BaseModel):
         data: HouseData
@@ -98,13 +111,25 @@ try:
     class PredictionResponse(BaseModel):
         prediction: Optional[float] = Field(None, description="Predicted price in EUR")
         status_code: Optional[int] = Field(None, description="Status code: 200=success, 400=input error, 500=server error")
-    
+
     @app.get("/")
     def root():
         """
         Health check
         """
         return "alive"
+
+    @app.get("/test")
+    def test_imports():
+        """
+        Test if imports work
+        """
+        try:
+            from preprocessing.cleaning_data import preprocess
+            from predict.prediction import predict
+            return {"status": "success", "message": "All imports working"}
+        except Exception as e:
+            return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
     
     @app.get("/predict")
     def predict_info():
@@ -130,87 +155,6 @@ try:
                 "parking": "bool - Has parking space (affects prediction)",
                 "lift": "bool - Has elevator (affects prediction)",
                 "building-state": "string - Building condition: NEW | GOOD | TO RENOVATE | JUST RENOVATED | TO BE DONE UP | TO REBUILD (affects prediction)"
-            },
-            
-            "field_specifications": {
-                "area": {
-                    "type": "integer",
-                    "unit": "square meters (m²)",
-                    "example": "120"
-                },
-                "property-type": {
-                    "type": "string",
-                    "accepted_values": ["HOUSE", "APARTMENT", "OTHERS"],
-                    "note": "Case insensitive, but must use these exact terms",
-                    "examples": ["HOUSE", "house", "House", "APARTMENT", "apartment",'Apartment','OTHERS','others','Others']
-                },
-                "bedrooms-number": {
-                    "type": "integer",
-                    "unit": "rooms",
-                    "example": "3"
-                },
-                "zip-code": {
-                    "type": "integer",
-                    "format": "4-digit number",
-                    "range": "1000-9999",
-                    "examples": {
-                        "1000-1299": "Brussels region",
-                        "2000-2999": "Antwerp region",
-                        "4000-4999": "Liège region",
-                        "9000-9999": "Ghent region"
-                    }
-                },
-                "building-state": {
-                    "type": "string (optional)",
-                    "accepted_values": ["NEW", "GOOD", "TO RENOVATE", "JUST RENOVATED","TO BE DONE UP", "TO REBUILD"],
-                    "note": "Case insensitive, but must use these exact terms",
-                    "examples": ["GOOD", "good", "NEW", "TO RENOVATE"]
-                }
-            },
-            
-            "input_validation": {
-                "case_insensitive": "All text inputs are case insensitive - use house, HOUSE, or House",
-                "exact_values_required": "Must use exact values as specified - no automatic conversions",
-                "clear_error_messages": "API will tell you exactly which values are accepted if you make a mistake"
-            },
-            
-            "examples": {
-                "standard_input": {
-                    "description": "Use exact values as specified (case insensitive)",
-                    "data": {
-                        "area": 100,
-                        "property-type": "APARTMENT",
-                        "bedrooms-number": 2,
-                        "zip-code": 2000,
-                        "building-state": "GOOD"
-                    }
-                },
-                "complete": {
-                    "description": "All available fields for better prediction accuracy",
-                    "data": {
-                        "area": 150,
-                        "property-type": "HOUSE",
-                        "bedrooms-number": 4,
-                        "zip-code": 1000,
-                        "garden": True,
-                        "swimming-pool": False,
-                        "terrace": True,
-                        "parking": True,
-                        "lift": False,
-                        "building-state": "GOOD"
-                    }
-                }
-            },
-            
-            "expected_response": {
-                "success": {
-                    "prediction": "float - Predicted price in EUR",
-                    "status_code": "200"
-                },
-                "error": {
-                    "prediction": "null",
-                    "status_code": "400 (bad input) or 500 (server error)"
-                }
             }
         }
     
@@ -220,6 +164,10 @@ try:
         Predict house price
         """
         try:
+            # 延迟导入 - 只在实际使用时导入
+            from preprocessing.cleaning_data import preprocess
+            from predict.prediction import predict
+            
             house_data = request.data
             house_dict = house_data.model_dump(by_alias=True)
             
