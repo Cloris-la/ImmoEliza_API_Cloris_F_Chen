@@ -14,12 +14,11 @@ class DataValidator:
     '''
 
     @staticmethod
-    def validation_input(data_dict) :
+    def validation_input(data_dict):
         '''
         validate mandatory fields and types
         '''
-
-        required_fields = ["area", "property-type", "rooms-number", 'zip-code']
+        required_fields = ["area", "property-type", "bedrooms-number", 'zip-code']  
         
         for field in required_fields:
             if field not in data_dict:
@@ -35,8 +34,8 @@ class DataValidator:
         if data_dict["property-type"] not in valid_types:
             return False, f"Invalid property type. Must be one of {valid_types}."
         
-        if data_dict["rooms-number"] < 0:  
-            return False, "Number of rooms cannot be negative."
+        if data_dict["bedrooms-number"] < 0:  
+            return False, "Number of bedrooms cannot be negative."
         
         zip_code = data_dict["zip-code"]
         if zip_code < 1000 or zip_code > 9999:
@@ -58,13 +57,13 @@ class InputCleaner:
         # field mapping: API format -> Training format
         field_mapping = {
             "area": "habitablesurface",
-            "rooms-number": "bedroomcount", 
-            "lift":"lift",
+            "bedrooms-number": "bedroomcount", 
             "garden": "garden",
             "swimming-pool": "swimmingpool",
             "terrace": "terrace",
-            "parking":"parking",
-            "epc-score":"epcscore",  
+            "parking": "parking",
+            "lift": "lift",
+            "epc-score": "epcscore",
             "building-state": "building_state",
             "property-type": "property_type",
             "zip-code": "zip_code",
@@ -72,15 +71,15 @@ class InputCleaner:
 
         # create data of dataframe format
         df_data = {}
-        for api_field, df_field in field_mapping.items() :
-            if api_field in data_dict :
+        for api_field, df_field in field_mapping.items():
+            if api_field in data_dict:
                 df_data[df_field] = data_dict[api_field]
             else:
                 df_data[df_field] = None
         return pd.DataFrame([df_data])
     
 
-class PropertyTypeEncoder(BaseEstimator,TransformerMixin) :
+class PropertyTypeEncoder(BaseEstimator,TransformerMixin):
     '''
     Define a sklearn transformer for property type
     '''
@@ -91,16 +90,16 @@ class PropertyTypeEncoder(BaseEstimator,TransformerMixin) :
             "OTHERS": 0
         }
 
-    def fit(self, X,y = None) :
+    def fit(self, X, y=None):
         return self
     
-    def transform(self, X) :
+    def transform(self, X):
         X_copy = X.copy()
         X_copy['type_encoded'] = X_copy["property_type"].map(self.property_type_map).fillna(0)
         return X_copy
     
     
-class BuildingStateEncoder(BaseEstimator,TransformerMixin) :
+class BuildingStateEncoder(BaseEstimator,TransformerMixin):
     '''
     Building state transformer
     '''
@@ -114,17 +113,17 @@ class BuildingStateEncoder(BaseEstimator,TransformerMixin) :
             "TO REBUILD": 5
         }
 
-    def fit(self,X,y = None) :
+    def fit(self, X, y=None):
         return self
         
-    def transform(self,X) :
+    def transform(self, X):
         X_copy = X.copy()
         X_copy['building_state'] = X_copy["building_state"].fillna('GOOD')
         X_copy["buildingcondition_encoded"] = X_copy['building_state'].map(self.building_state_map).fillna(2)
         return X_copy
         
 
-class EPCScoreEncoder(BaseEstimator,TransformerMixin) :
+class EPCScoreEncoder(BaseEstimator,TransformerMixin):
     '''
     EPC Score transformer
     '''
@@ -134,10 +133,10 @@ class EPCScoreEncoder(BaseEstimator,TransformerMixin) :
             "D": 5, "E": 6, "F": 7, "G": 8
         }
 
-    def fit(self, X, y=None) :
+    def fit(self, X, y=None):
         return self
     
-    def transform(self,X) :
+    def transform(self, X):
         X_copy = X.copy()
         # fill default value
         if 'epcscore' not in X_copy.columns:
@@ -156,24 +155,24 @@ class BooleanFeatureEncoder(BaseEstimator,TransformerMixin):
            'lift', 'garden', 'swimmingpool', 'terrace', 'parking'
         }
         self.feature_mapping = {
-            'lift' : 'haslift',
-            'garden' :'hasgarden',
-            'swimmingpool' : 'hasswimmingpool',
-            'terrace' : 'hasterrace',
-            'parking' : 'hasparking'
+            'lift': 'haslift',
+            'garden': 'hasgarden',
+            'swimmingpool': 'hasswimmingpool',
+            'terrace': 'hasterrace',
+            'parking': 'hasparking'
         }
 
-    def fit(self,X,Y = None):
+    def fit(self, X, y=None):
         return self
 
-    def transform(self,X) :
+    def transform(self, X):
         X_copy = X.copy()
-        for feature in self.boolean_features :
+        for feature in self.boolean_features:
             if feature in X_copy.columns:
                 encoded_name = self.feature_mapping.get(feature, f'has{feature}')
                 X_copy[encoded_name] = X_copy[feature].fillna(False).astype(bool).astype(int)
             else:
-                encoded_name = self.feature_mapping.get(feature,f"has{feature}")
+                encoded_name = self.feature_mapping.get(feature, f"has{feature}")
                 X_copy[encoded_name] = 0
         return X_copy
     
@@ -265,7 +264,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 
 def create_preprocessing_pipeline():
     """
-    Create a complete proprecessing pipeline
+    Create a complete preprocessing pipeline
     """
     pipeline = Pipeline([
         ('property_encoder', PropertyTypeEncoder()),
@@ -311,14 +310,14 @@ def preprocess(data_dict):
     except Exception as e:
         return None, f'Error during preprocessing: {str(e)}'
 
-def save_preprocessing_pipeline(pipeline, filepath='preprocessing/preprocessing_pipeline.pkl'):
+def save_preprocessing_pipeline(pipeline, filepath='preprocessing/preprocessing_pipeline.pkl'):  
     """
     save preprocessing pipeline
     """
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     joblib.dump(pipeline, filepath)
 
-def load_preprocessing_pipeline(filepath='preprocessing/preprocessing_pipeline.pkl'):
+def load_preprocessing_pipeline(filepath='preprocessing/preprocessing_pipeline.pkl'):  
     """
     load preprocessing pipeline
     """

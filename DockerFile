@@ -1,0 +1,22 @@
+# Use Python 3.10 image
+FROM python:3.10-slim
+
+# Set working directory to /app
+WORKDIR /app
+
+# Copy requirements.txt first (for caching)
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of project files into /app
+COPY . .
+
+# Expose port (FastAPI default:8000)
+EXPOSE 8000
+
+# Command to run app
+CMD ["python", "app.py"]
+
+
