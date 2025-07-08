@@ -256,7 +256,7 @@ try:
     print("✅ API configuration completed")
     
     if __name__ == "__main__":
-        port = int(os.environ.get("PORT", 8000))
+        port = int(os.environ.get("PORT", 10000))
         print(f"🎯 Starting server on port {port}")
         print(f"📖 Visit http://localhost:{port}/docs for API documentation")
         print("🎉 Users now only need to input fields actually used by the model!")
