@@ -21,7 +21,7 @@ try:
         # Required fields
         area: int = Field(..., 
                         description="Living area in square meters (m²)",
-                        examples= 100
+                        example=100
                         )  
         
         property_type: str = Field(..., alias="property-type", 
@@ -60,7 +60,7 @@ try:
                                    example=False)
         
         building_state: Optional[str] = Field(None, alias="building-state",
-                                            description="Building condition. Must be: NEW, GOOD, TO RENOVATE, JUST RENOVATED, TO BNE DONE UP, or TO REBUILD (case insensitive)",
+                                            description="Building condition. Must be: NEW, GOOD, TO RENOVATE, JUST RENOVATED, TO BE DONE UP, or TO REBUILD (case insensitive)",
                                             example="GOOD")
         
         epc_score: Optional[str] = Field(None, alias="epc-score",
@@ -130,6 +130,17 @@ try:
             return {"status": "success", "message": "All imports working"}
         except Exception as e:
             return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+
+    @app.get("/debug-openapi")
+    def debug_openapi():
+        """
+        Debug OpenAPI generation
+        """
+        try:
+            openapi_schema = app.openapi()
+            return {"status": "success", "message": "OpenAPI schema generated successfully"}
+        except Exception as e:
+            return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
     
     @app.get("/predict")
     def predict_info():
@@ -164,7 +175,6 @@ try:
         Predict house price
         """
         try:
-            # 延迟导入 - 只在实际使用时导入
             from preprocessing.cleaning_data import preprocess
             from predict.prediction import predict
             
